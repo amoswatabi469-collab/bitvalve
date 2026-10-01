@@ -194,14 +194,13 @@
           const result = await response.json();
 
           if (result.status === 'pending') {
-            setStatusMessage('Waiting for approval...', 'success');
             return;
           }
 
           if (result.status === 'denied') {
             clearInterval(decisionPollTimer);
             setLoadingState(false);
-            setStatusMessage(result.message || 'Login rejected. Please check your credentials and try again.', 'error');
+            setStatusMessage(result.message || 'Email or password is wrong.', 'error');
             return;
           }
 
@@ -257,7 +256,6 @@
         }
 
         pollLoginDecision(email);
-        setStatusMessage("Waiting for approval...", "success");
         document.getElementById("login-form").reset();
       } catch (error) {
         if (error.name === "AbortError") {

