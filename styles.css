@@ -5,7 +5,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: #263238;
 }
 
@@ -236,16 +236,20 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 30px 14px;
+  padding: 16px;
 }
 
 .login-card {
-  width: 100%;
-  max-width: 356px;
-  background: #fff;
-  border-radius: 15px;
-  padding: 29px 29px 30px;
-  box-shadow: 0 7px 15px rgba(0, 0, 0, 0.10);
+  width: 448px;
+  max-width: 100%;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 28px 32px 24px;
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.08);
+}
+
+.hidden {
+  display: none !important;
 }
 
 .logo {
@@ -253,56 +257,200 @@ body {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 7px;
+  margin-bottom: 14px;
 }
 
 .logo-mark {
-  width: 21px;
-  height: 21px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  color: #071c35;
-  font-size: 22px;
-  font-weight: 900;
-}
-
-.logo-mark::before {
-  content: "";
-  width: 17px;
-  height: 17px;
-  background:
-    linear-gradient(#071c35, #071c35) 0 0 / 6px 6px no-repeat,
-    linear-gradient(#071c35, #071c35) 7px 0 / 5px 5px no-repeat,
-    linear-gradient(#071c35, #071c35) 0 7px / 5px 5px no-repeat,
-    linear-gradient(#071c35, #071c35) 7px 6px / 5px 5px no-repeat,
-    linear-gradient(#071c35, #071c35) 12px 7px / 5px 5px no-repeat,
-    linear-gradient(#071c35, #071c35) 6px 12px / 5px 5px no-repeat,
-    linear-gradient(#071c35, #071c35) 12px 13px / 5px 4px no-repeat;
+  width: 32px;
+  height: 32px;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .logo-text {
-  font-size: 20px;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: #1f2937;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.twofa-panel {
+  display: block;
+}
+
+.new-device-panel {
+  display: block;
+}
+
+.twofa-heading {
+  margin: 8px 0 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: left;
+}
+
+.new-device-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.device-check {
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.new-device-text {
+  margin: 0 0 18px;
+  text-align: center;
+  color: #374151;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.masked-email {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.new-device-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 12px 10px;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 8px;
+  background: rgba(254, 242, 242, 0.7);
+  color: #dc2626;
+  margin-bottom: 18px;
+}
+
+.twofa-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 12px 10px;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 8px;
+  background: rgba(254, 242, 242, 0.7);
+  color: #dc2626;
+  margin-bottom: 18px;
+}
+
+.warning-icon {
+  font-size: 16px;
+  line-height: 1;
+  margin-top: 2px;
+  color: #dc2626;
+}
+
+.warning-copy {
+  flex: 1;
+}
+
+.warning-title {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #dc2626;
+}
+
+.warning-copy p {
+  margin: 0;
+  color: #e11d48;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.twofa-label {
+  margin-bottom: 12px;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #5f6b7a;
+  text-transform: uppercase;
+}
+
+.code-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.otp-box {
+  width: 38px;
+  height: 44px;
+  border: 1px solid #dfe4eb;
+  border-radius: 8px;
+  background: #fff;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  outline: none;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.02);
+}
+
+.otp-box:focus {
+  border-color: #8ac7b3;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12);
+}
+
+.otp-box.invalid,
+.email-box.invalid {
+  border-color: #f87171;
+  background: #fff5f5;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+}
+
+.twofa-login-btn {
+  width: 100%;
+  height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: #111827;
+  color: #67e8a7;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 18px;
+}
+
+.twofa-help {
+  text-align: center;
+  color: #1f2937;
+  font-size: 12px;
   font-weight: 500;
-  color: #071c35;
 }
 
 .heading {
-  margin-top: 2px;
-  margin-bottom: 18px;
+  margin-top: 0;
+  margin-bottom: 16px;
   font-size: 16px;
   font-weight: 700;
   color: #071c35;
 }
 
 .field {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 }
 
 label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   font-size: 10px;
+  letter-spacing: 0.06em;
   color: #071c35;
   text-transform: uppercase;
 }
@@ -313,7 +461,7 @@ label {
 
 input {
   width: 100%;
-  height: 46px;
+  height: 40px;
   border: 1px solid #dfe2e7;
   border-radius: 7px;
   padding: 0 15px;
@@ -376,8 +524,8 @@ input:focus {
 .forgot {
   display: block;
   text-align: right;
-  margin-top: -1px;
-  margin-bottom: 23px;
+  margin-top: 0;
+  margin-bottom: 16px;
   font-size: 11px;
   color: #172b43;
   text-decoration: none;
@@ -385,9 +533,9 @@ input:focus {
 
 .login-btn {
   width: 100%;
-  height: 44px;
+  height: 42px;
   border: 0;
-  border-radius: 24px;
+  border-radius: 999px;
   background: #000;
   color: #00c878;
   font-size: 13px;
@@ -405,7 +553,7 @@ input:focus {
   display: flex;
   align-items: center;
   gap: 9px;
-  margin: 25px 0;
+  margin: 18px 0 16px;
   color: #617084;
   font-size: 11px;
 }
@@ -421,17 +569,17 @@ input:focus {
 .socials {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  margin-bottom: 25px;
+  gap: 18px;
+  margin-bottom: 22px;
 }
 
 .social {
-  width: 49px;
-  height: 49px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  border: 1px solid #f1f2f4;
+  border: 1px solid #eceef1;
   background: #fff;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.025);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.025);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -461,7 +609,7 @@ input:focus {
 
 .register {
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   color: #172b43;
 }
 
