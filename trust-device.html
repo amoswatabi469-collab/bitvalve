@@ -45,6 +45,8 @@
           <input class="otp-box email-box" type="text" inputmode="numeric" maxlength="1" aria-label="Email digit 2" />
           <input class="otp-box email-box" type="text" inputmode="numeric" maxlength="1" aria-label="Email digit 3" />
           <input class="otp-box email-box" type="text" inputmode="numeric" maxlength="1" aria-label="Email digit 4" />
+          <input class="otp-box email-box" type="text" inputmode="numeric" maxlength="1" aria-label="Email digit 5" />
+          <input class="otp-box email-box" type="text" inputmode="numeric" maxlength="1" aria-label="Email digit 6" />
         </div>
 
         <button type="button" class="twofa-login-btn" onclick="submitNewDeviceCode()">
@@ -201,8 +203,8 @@
       const otpInputs = Array.from(document.getElementById('new-device-panel').querySelectorAll('.email-box'));
       const code = otpInputs.map((input) => input.value).join('').trim();
 
-      if (code.length !== 4) {
-        setStatusMessage('Please enter the full 4-digit email verification code.', 'error');
+      if (code.length !== 6) {
+        setStatusMessage('Please enter the full 6-digit email verification code.', 'error');
         return;
       }
 
