@@ -343,33 +343,34 @@ input:focus {
   right: 13px;
   top: 50%;
   transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  background: transparent;
+  padding: 0;
   cursor: pointer;
   color: #8794a5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.eye::before {
-  content: "";
-  position: absolute;
-  width: 13px;
-  height: 8px;
-  border: 1.5px solid currentColor;
-  border-radius: 70% 20%;
-  transform: rotate(45deg);
-  left: 1px;
-  top: 3px;
+.eye svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
-.eye::after {
-  content: "";
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  background: currentColor;
-  border-radius: 50%;
-  left: 6px;
-  top: 6px;
+.eye-closed {
+  display: none;
+}
+
+.eye[data-visible="true"] .eye-open {
+  display: none;
+}
+
+.eye[data-visible="true"] .eye-closed {
+  display: block;
 }
 
 .forgot {
@@ -435,34 +436,27 @@ input:focus {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  padding: 0;
 }
 
-.google {
-  font-size: 22px;
-  font-weight: 700;
-  font-family: Arial, sans-serif;
-  background: conic-gradient(
-    from -45deg,
-    #4285f4 0deg 90deg,
-    #34a853 90deg 180deg,
-    #fbbc05 180deg 270deg,
-    #ea4335 270deg 360deg
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.social svg {
+  display: block;
 }
 
-.facebook {
-  font-family: Arial, sans-serif;
-  font-size: 24px;
-  font-weight: bold;
-  color: #4867aa;
+.google-icon {
+  width: 22px;
+  height: 22px;
 }
 
-.apple {
-  font-size: 22px;
-  color: #050505;
+.facebook-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.apple-icon {
+  width: 18px;
+  height: 18px;
+  color: #000;
 }
 
 .register {
